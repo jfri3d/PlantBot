@@ -3,12 +3,14 @@ import os
 import re
 import time
 
+from dotenv import load_dotenv
 from slackclient import SlackClient
 
 from constants import RTM_LISTENER_DELAY, MENTION_REGEX
 
 logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
+load_dotenv(dotenv_path='.envrc')
 slack_client = SlackClient(os.environ.get("SLACK_BOT_TOKEN"))
 
 
