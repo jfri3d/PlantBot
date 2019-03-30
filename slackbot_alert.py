@@ -4,7 +4,7 @@ import time
 
 from slackclient import SlackClient
 
-from constants import CHANNEL, RTM_READ_DELAY, MESSAGE
+from constants import CHANNEL, RTM_ALERT_DELAY, MESSAGE
 
 logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
@@ -28,6 +28,6 @@ if __name__ == "__main__":
                 link_names=1,
             )
 
-            time.sleep(RTM_READ_DELAY)
+            time.sleep(RTM_ALERT_DELAY)
     else:
         logging.info("Connection failed :(")
