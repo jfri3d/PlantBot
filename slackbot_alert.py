@@ -4,9 +4,9 @@ import time
 
 from dotenv import load_dotenv
 from slackclient import SlackClient
-from utils import latest_data
 
 from constants import CHANNEL, RTM_ALERT_DELAY, MOISTURE_LIMIT
+from utils import latest_data, plot_data
 
 logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
@@ -20,18 +20,25 @@ if __name__ == "__main__":
         logging.info("Starting")
 
         # query latest plant information
-        temperature, moisture, light, conductivity = latest_data()
+        data = latest_data(num=1)[0]
 
         # logic for when to water!!!
-        while moisture < MOISTURE_LIMIT:
-            message = 'Water me!\n\nTemp = {} °C\nMoisture = {} %\nLight = {} lux\nConductivity = {} uS/cm'.format(temperature, moisture, light, conductivity)
+        while data['moisture'] > MOISTURE_LIMIT:
             logging.info("Posting message to {}".format(CHANNEL))
-            slack_client.api_call(
-                "chat.postMessage",
-                channel=CHANNEL,
-                text="@channel {}".format(message),
-                link_names=1,
-            )
+            message = 'Water me!\n\n*Temperature* = {} °C\n*Moisture* = {} %\n*Light* = {} lux\n*Conductivity* = {} uS/cm'.format(
+                data['temperature'], data['moisture'], data['light'], data['conductivity'])
+
+            out_path = os.path.join('./ims', "{}.png".format(round(time.time())))
+            plot_data(latest_data(num=100), out_path=out_path)
+
+            with open(out_path, "rb") as src:
+                slack_client.api_call(
+                    "files.upload",
+                    channels=CHANNEL,
+                    file=src,
+                    title='WATER ME!',
+                    initial_comment=message,
+                )
 
             time.sleep(RTM_ALERT_DELAY)
     else:

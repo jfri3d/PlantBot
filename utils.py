@@ -4,12 +4,15 @@ import os
 import sqlite3
 from datetime import datetime as dt
 
+import matplotlib.pyplot as plt
+import pandas as pd
 from astral import Astral
 from btlewrap import BluepyBackend
 from dateutil import tz
 from dotenv import load_dotenv
 from miflora.miflora_poller import MiFloraPoller, \
     MI_CONDUCTIVITY, MI_MOISTURE, MI_LIGHT, MI_TEMPERATURE, MI_BATTERY
+from mpl_toolkits.axes_grid1 import Grid
 
 load_dotenv(dotenv_path='.envrc')
 DB_PATH = 'PlantBot.db'
@@ -94,11 +97,37 @@ def _insert_data(temperature, moisture, light, conductivity, battery):
     conn.commit()
 
 
-def latest_data():
+def latest_data(num=1):
     conn = _db_connect()  # connect to the database
     cur = conn.cursor()  # instantiate a cursor obj
 
-    command = """SELECT * FROM plantbot ORDER BY date DESC LIMIT 1"""
+    command = """SELECT * FROM plantbot ORDER BY date DESC LIMIT {}""".format(num)
     cur.execute(command)
-    date, temperature, moisture, light, conductivity, battery = cur.fetchall()[0]
-    return temperature, moisture, light, conductivity
+    out = []
+    for val in cur.fetchall():
+        out.append({'date': val[0],
+                    'temperature': val[1],
+                    'moisture': val[2],
+                    'light': val[3],
+                    'conductivity': val[4]})
+    return out
+
+
+# TODO -> make this pretty!!!
+def plot_data(data, out_path):
+    df = pd.DataFrame(data)
+    df['date'] = df['date'].astype('datetime64[ns]')
+
+    plt.close('all')
+    fig = plt.figure()
+    ax = Grid(fig, rect=111, nrows_ncols=(4, 1),
+              axes_pad=0.25, label_mode='L',
+              )
+
+    ax[0].plot(df['date'], df['moisture'], '.')
+    ax[1].plot(df['date'], df['temperature'], '.')
+    ax[2].plot(df['date'], df['light'], '.')
+    ax[3].plot(df['date'], df['conductivity'], '.')
+
+    plt.tight_layout()
+    plt.savefig(out_path)
