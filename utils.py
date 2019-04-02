@@ -92,3 +92,13 @@ def _insert_data(temperature, moisture, light, conductivity, battery):
     command = """INSERT INTO plantbot (date, temperature, moisture, light, conductivity, battery) VALUES (?, ?, ?, ?, ?, ?)"""
     cur.execute(command, (dt.now().strftime("%Y/%m/%d, %H:%M:%S"), temperature, moisture, light, conductivity, battery))
     conn.commit()
+
+
+def latest_data():
+    conn = _db_connect()  # connect to the database
+    cur = conn.cursor()  # instantiate a cursor obj
+
+    command = """SELECT * FROM plantbot ORDER BY date DESC LIMIT 1"""
+    cur.execute(command)
+    date, temperature, moisture, light, conductivity, battery = cur.fetchall()[0]
+    return temperature, moisture, light, conductivity

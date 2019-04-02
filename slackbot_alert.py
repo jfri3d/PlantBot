@@ -4,8 +4,9 @@ import time
 
 from dotenv import load_dotenv
 from slackclient import SlackClient
+from utils import latest_data
 
-from constants import CHANNEL, RTM_ALERT_DELAY, MESSAGE
+from constants import CHANNEL, RTM_ALERT_DELAY
 
 logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
@@ -18,15 +19,17 @@ if __name__ == "__main__":
 
         logging.info("Starting")
 
-        # TODO -> query plant information
+        # query latest plant information
+        temperature, moisture, light, conductivity = latest_data()
 
-        # TODO -> add logic regarding plant
-        while True:
+        # logic for when to water!!!
+        while moisture < 30:
+            message = 'Water me!\n\nTemp = {} °C\nMoisture = {} %\nLight = {} lux\nConductivity = {} uS/cm'.format(temperature, moisture, light, conductivity)
             logging.info("Posting message to {}".format(CHANNEL))
             slack_client.api_call(
                 "chat.postMessage",
                 channel=CHANNEL,
-                text="@channel {}".format(MESSAGE),
+                text="@channel {}".format(message),
                 link_names=1,
             )
 
