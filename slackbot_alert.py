@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from slackclient import SlackClient
 from utils import latest_data
 
-from constants import CHANNEL, RTM_ALERT_DELAY
+from constants import CHANNEL, RTM_ALERT_DELAY, MOISTURE_LIMIT
 
 logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
         temperature, moisture, light, conductivity = latest_data()
 
         # logic for when to water!!!
-        while moisture < 30:
+        while moisture < MOISTURE_LIMIT:
             message = 'Water me!\n\nTemp = {} °C\nMoisture = {} %\nLight = {} lux\nConductivity = {} uS/cm'.format(temperature, moisture, light, conductivity)
             logging.info("Posting message to {}".format(CHANNEL))
             slack_client.api_call(
