@@ -23,7 +23,7 @@ if __name__ == "__main__":
         data = latest_data(num=1)[0]
 
         # logic for when to water!!!
-        while data['moisture'] > MOISTURE_LIMIT:
+        while data['moisture'] < MOISTURE_LIMIT:
             logging.info("Posting message to {}".format(CHANNEL))
             message = 'Water me!\n\n*Temperature* = {} °C\n*Moisture* = {} %\n*Light* = {} lux\n*Conductivity* = {} uS/cm'.format(
                 data['temperature'], data['moisture'], data['light'], data['conductivity'])
