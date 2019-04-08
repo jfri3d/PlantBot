@@ -4,8 +4,10 @@ import os
 import sqlite3
 from datetime import datetime as dt
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
+import requests
 from astral import Astral
 from btlewrap import BluepyBackend
 from dateutil import tz
@@ -13,6 +15,7 @@ from dotenv import load_dotenv
 from miflora.miflora_poller import MiFloraPoller, \
     MI_CONDUCTIVITY, MI_MOISTURE, MI_LIGHT, MI_TEMPERATURE, MI_BATTERY
 from mpl_toolkits.axes_grid1 import Grid
+from pandas.io.json import json_normalize
 
 load_dotenv(dotenv_path='.envrc')
 DB_PATH = 'PlantBot.db'
@@ -22,6 +25,9 @@ utc_zone = tz.tzutc()
 local_zone = tz.tzlocal()
 
 MAC_ADD = os.environ.get("MAC_ADD")
+LAT = os.environ.get("LAT")
+LON = os.environ.get("LON")
+ACCUWEATHER_TOKEN = os.environ.get("ACCUWEATHER_TOKEN")
 
 
 def get_daylight_hours(lat, lon, today):
@@ -113,21 +119,61 @@ def latest_data(num=1):
     return out
 
 
+def get_forecast():
+    response = requests.get(
+        'http://dataservice.accuweather.com/locations/v1/cities/geoposition/search',
+        params={'q': '{},{}'.format(LAT, LON), 'apikey': ACCUWEATHER_TOKEN},
+    )
+
+    loc_key = response.json()['Key']
+
+    response = requests.get(
+        'http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{}'.format(loc_key),
+        params={'metric': True, 'apikey': ACCUWEATHER_TOKEN},
+    )
+
+    df = json_normalize(response.json())
+
+    return df
+
+
+# TODO -> interpolate plant data to regular time interval (10 mins?)
+
+# TODO -> de-mean moisture and soil conductivity
+
+# TODO -> build function relating moisture to age + temperature?
+
+# TODO -> predict moisture with forecast temperature
+
 # TODO -> make this pretty!!!
+
+
 def plot_data(data, out_path):
     df = pd.DataFrame(data)
-    df['date'] = df['date'].astype('datetime64[ns]')
+    df['date'] = pd.to_datetime(df['date'], infer_datetime_format=True)
 
     plt.close('all')
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 6), dpi=150)
     ax = Grid(fig, rect=111, nrows_ncols=(4, 1),
-              axes_pad=0.25, label_mode='L',
+              axes_pad=0.1, label_mode='L',
               )
 
-    ax[0].plot(df['date'], df['moisture'], '.')
-    ax[1].plot(df['date'], df['temperature'], '.')
-    ax[2].plot(df['date'], df['light'], '.')
-    ax[3].plot(df['date'], df['conductivity'], '.')
+    hours = mdates.HourLocator(interval=12)
+    h_fmt = mdates.DateFormatter('%a %-I%p')
+
+    ax[0].plot(df['date'], df['moisture'], '-b', lw=1)
+    ax[0].set_ylabel('Moisture [%]', fontsize=10)
+    ax[1].plot(df['date'], df['temperature'], '0.7', lw=1)
+    ax[1].set_ylabel('Temp [°C]', fontsize=10)
+    ax[2].plot(df['date'], df['light'], '0.5', lw=1)
+    ax[2].set_ylabel('Light [lux]', fontsize=10)
+    ax[3].plot(df['date'], df['conductivity'], '0.3', lw=1)
+    ax[3].set_ylabel('Conductivity\n[uS/cm]', fontsize=10)
+
+    ax[3].xaxis.set_major_locator(hours)
+    ax[3].xaxis.set_major_formatter(h_fmt)
+
+    fig.autofmt_xdate()
 
     plt.tight_layout()
     plt.savefig(out_path)

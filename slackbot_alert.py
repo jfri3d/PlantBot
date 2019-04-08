@@ -39,7 +39,6 @@ if __name__ == "__main__":
                     title='WATER ME!',
                     initial_comment=message,
                 )
-
             time.sleep(RTM_ALERT_DELAY)
     else:
         logging.info("Connection failed :(")
