@@ -9,6 +9,7 @@ from apscheduler.triggers.combining import OrTrigger
 from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 
+from constants import INTERVAL
 from utils import get_daylight_hours, get_plant_data
 
 load_dotenv(dotenv_path='.envrc')
@@ -20,9 +21,6 @@ scheduler = BlockingScheduler()
 # get geolocation from ENV
 LAT = os.environ.get("LAT")
 LON = os.environ.get("LON")
-
-# define fixed rate for running "get_data"
-INTERVAL = 20
 
 
 @scheduler.scheduled_job(CronTrigger(minute='0', hour='0', day='*', month='*', day_of_week='*'))

@@ -3,7 +3,8 @@ import logging
 import os
 import sqlite3
 from datetime import datetime as dt
-
+import giphypop
+import random
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -135,6 +136,23 @@ def get_forecast():
     df = json_normalize(response.json())
 
     return df
+
+
+def giphy_grabber(search):
+
+    # call giphy
+    g = giphypop.Giphy()
+
+    # search based on keyword
+    gen = g.search(search.replace('_', ' '))
+
+    # get random
+    choice = random.randint(0, 25)
+    ii = 0
+    while ii != choice:
+        url = next(gen)
+        ii += 1
+    return url
 
 
 # TODO -> interpolate plant data to regular time interval (10 mins?)

@@ -1,0 +1,6 @@
+export SLACK_TOKEN=
+export SLACK_BOT_TOKEN=
+export LAT=
+export LON=
+export MAC_ADD=
+export ACCUWEATHER_TOKEN=
