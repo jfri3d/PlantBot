@@ -1,22 +1,24 @@
 import inspect
 import logging
 import os
+import random
 import sqlite3
 from datetime import datetime as dt
+
 import giphypop
-import random
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
-import pandas as pd
-import requests
+# import matplotlib.dates as mdates
+# import matplotlib.pyplot as plt
+# import pandas as pd
+# import requests
 from astral import Astral
 from btlewrap import BluepyBackend
 from dateutil import tz
 from dotenv import load_dotenv
 from miflora.miflora_poller import MiFloraPoller, \
     MI_CONDUCTIVITY, MI_MOISTURE, MI_LIGHT, MI_TEMPERATURE, MI_BATTERY
-from mpl_toolkits.axes_grid1 import Grid
-from pandas.io.json import json_normalize
+
+# from mpl_toolkits.axes_grid1 import Grid
+# from pandas.io.json import json_normalize
 
 load_dotenv(dotenv_path='.envrc')
 DB_PATH = 'PlantBot.db'
@@ -120,26 +122,25 @@ def latest_data(num=1):
     return out
 
 
-def get_forecast():
-    response = requests.get(
-        'http://dataservice.accuweather.com/locations/v1/cities/geoposition/search',
-        params={'q': '{},{}'.format(LAT, LON), 'apikey': ACCUWEATHER_TOKEN},
-    )
-
-    loc_key = response.json()['Key']
-
-    response = requests.get(
-        'http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{}'.format(loc_key),
-        params={'metric': True, 'apikey': ACCUWEATHER_TOKEN},
-    )
-
-    df = json_normalize(response.json())
-
-    return df
+# def get_forecast():
+#     response = requests.get(
+#         'http://dataservice.accuweather.com/locations/v1/cities/geoposition/search',
+#         params={'q': '{},{}'.format(LAT, LON), 'apikey': ACCUWEATHER_TOKEN},
+#     )
+#
+#     loc_key = response.json()['Key']
+#
+#     response = requests.get(
+#         'http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{}'.format(loc_key),
+#         params={'metric': True, 'apikey': ACCUWEATHER_TOKEN},
+#     )
+#
+#     df = json_normalize(response.json())
+#
+#     return df
 
 
 def giphy_grabber(search):
-
     # call giphy
     g = giphypop.Giphy()
 
@@ -154,7 +155,6 @@ def giphy_grabber(search):
         ii += 1
     return url
 
-
 # TODO -> interpolate plant data to regular time interval (10 mins?)
 
 # TODO -> de-mean moisture and soil conductivity
@@ -166,32 +166,32 @@ def giphy_grabber(search):
 # TODO -> make this pretty!!!
 
 
-def plot_data(data, out_path):
-    df = pd.DataFrame(data)
-    df['date'] = pd.to_datetime(df['date'], infer_datetime_format=True)
-
-    plt.close('all')
-    fig = plt.figure(figsize=(8, 6), dpi=150)
-    ax = Grid(fig, rect=111, nrows_ncols=(4, 1),
-              axes_pad=0.1, label_mode='L',
-              )
-
-    hours = mdates.HourLocator(interval=12)
-    h_fmt = mdates.DateFormatter('%a %-I%p')
-
-    ax[0].plot(df['date'], df['moisture'], '-b', lw=1)
-    ax[0].set_ylabel('Moisture [%]', fontsize=10)
-    ax[1].plot(df['date'], df['temperature'], '0.7', lw=1)
-    ax[1].set_ylabel('Temp [°C]', fontsize=10)
-    ax[2].plot(df['date'], df['light'], '0.5', lw=1)
-    ax[2].set_ylabel('Light [lux]', fontsize=10)
-    ax[3].plot(df['date'], df['conductivity'], '0.3', lw=1)
-    ax[3].set_ylabel('Conductivity\n[uS/cm]', fontsize=10)
-
-    ax[3].xaxis.set_major_locator(hours)
-    ax[3].xaxis.set_major_formatter(h_fmt)
-
-    fig.autofmt_xdate()
-
-    plt.tight_layout()
-    plt.savefig(out_path)
+# def plot_data(data, out_path):
+#     df = pd.DataFrame(data)
+#     df['date'] = pd.to_datetime(df['date'], infer_datetime_format=True)
+#
+#     plt.close('all')
+#     fig = plt.figure(figsize=(8, 6), dpi=150)
+#     ax = Grid(fig, rect=111, nrows_ncols=(4, 1),
+#               axes_pad=0.1, label_mode='L',
+#               )
+#
+#     hours = mdates.HourLocator(interval=12)
+#     h_fmt = mdates.DateFormatter('%a %-I%p')
+#
+#     ax[0].plot(df['date'], df['moisture'], '-b', lw=1)
+#     ax[0].set_ylabel('Moisture [%]', fontsize=10)
+#     ax[1].plot(df['date'], df['temperature'], '0.7', lw=1)
+#     ax[1].set_ylabel('Temp [°C]', fontsize=10)
+#     ax[2].plot(df['date'], df['light'], '0.5', lw=1)
+#     ax[2].set_ylabel('Light [lux]', fontsize=10)
+#     ax[3].plot(df['date'], df['conductivity'], '0.3', lw=1)
+#     ax[3].set_ylabel('Conductivity\n[uS/cm]', fontsize=10)
+#
+#     ax[3].xaxis.set_major_locator(hours)
+#     ax[3].xaxis.set_major_formatter(h_fmt)
+#
+#     fig.autofmt_xdate()
+#
+#     plt.tight_layout()
+#     plt.savefig(out_path)
