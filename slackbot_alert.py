@@ -1,4 +1,5 @@
 import inspect
+import json
 import logging
 import os
 
@@ -7,7 +8,7 @@ from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 from slackclient import SlackClient
 
-from constants import CHANNEL, INTERVAL, MOISTURE_MIN, MOISTURE_MAX
+from constants import CHANNEL, INTERVAL, EMOJI_LIST, PLANT_DEF
 from utils import latest_data, giphy_grabber
 
 load_dotenv(dotenv_path='.envrc')
@@ -20,32 +21,46 @@ scheduler = BlockingScheduler()
 
 @scheduler.scheduled_job(CronTrigger(minute='5/{}'.format(INTERVAL), hour='*', day='*', month='*', day_of_week='*'))
 def slackbot_alert():
+    """
+    PlantBot alert via Slack based on which registered plant is below its respective moisture threshold.
+
+    """
+
     func_name = inspect.stack()[0][3]
     logging.info('[{}] -> Starting Job'.format(func_name))
     if slack_client.rtm_connect(with_team_state=False):
 
-        # query latest plant information
-        data = latest_data(num=1)[0]
+        # load the plant definition file
+        with open(PLANT_DEF, 'r') as src:
+            plant_def = json.load(src)
 
-        # logic based on moisture
-        if not MOISTURE_MIN < data['moisture'] < MOISTURE_MAX:
-            logging.info('[{}] -> Posting message to {}'.format(func_name, CHANNEL))
+        # iterate through plants
+        for p in plant_def['plants']:
 
-            # get url for search term for slack
-            url = giphy_grabber('water')
+            # query latest plant information
+            data = latest_data(p['name'], num=1)[0]
 
-            message = ':potable_water: Please Water me!:potable_water:'
-            message += '\n*Moisture* = {} %'.format(data['moisture'])
-            message += '\n*Temperature* = {} °C'.format(data['temperature'])
-            message += '\n*Light* = {} lux'.format(data['light'])
-            message += '\n*Conductivity* = {} uS/cm'.format(data['conductivity'])
-            message += '\n\n{}'.format(url)
+            # logic based on moisture
+            if data['moisture'] < p['min_moisture']:
+                logging.info('[{}] -> {} needs to be watered!!!'.format(func_name, p['name']))
 
-            # post message
-            slack_client.api_call("chat.postMessage", channel=CHANNEL, text=message)
+                # get url for search term for slack
+                url = giphy_grabber('water')
 
-        else:
-            logging.info('[{}] -> Healthy moisture ({} %)!'.format(func_name, data['moisture']))
+                message = '\n:potable_water: *{}* needs water!:potable_water:'.format(p['name'])
+                message += '\n\n*Moisture* = {} %'.format(data['moisture'])
+                message += '\n*Temperature* = {} °C'.format(data['temperature'])
+                message += '\n*Light* = {} lux'.format(data['light'])
+                message += '\n*Conductivity* = {} uS/cm'.format(data['conductivity'])
+                message += '\n\n{}'.format(url)
+
+                # post message
+                resp = slack_client.api_call("chat.postMessage", text=message, channel=CHANNEL)
+
+                for e in EMOJI_LIST:
+                    slack_client.api_call("reactions.add", name=e, timestamp=resp['ts'], channel=resp['channel'])
+            else:
+                logging.info('[{}] -> Healthy moisture ({} %)!'.format(func_name, data['moisture']))
     else:
         logging.info('[{}] -> Connection failed :('.format(func_name))
 

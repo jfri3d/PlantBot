@@ -25,6 +25,12 @@ LON = os.environ.get("LON")
 
 @scheduler.scheduled_job(CronTrigger(minute='0', hour='0', day='*', month='*', day_of_week='*'))
 def daily_trigger():
+    """
+    PlantBot trigger for connecting to all Mi Flora sensors (based on MAC address). Note that data is collected in
+    different frequencies between day and night. Night is hourly, while day is based on INTERVAL between sunrise and
+    sunset.
+
+    """
     func_name = inspect.stack()[0][3]
 
     logging.info('[{}] -> Starting Job'.format(func_name))

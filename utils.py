@@ -1,4 +1,5 @@
 import inspect
+import json
 import logging
 import os
 import random
@@ -6,10 +7,6 @@ import sqlite3
 from datetime import datetime as dt
 
 import giphypop
-# import matplotlib.dates as mdates
-# import matplotlib.pyplot as plt
-# import pandas as pd
-# import requests
 from astral import Astral
 from btlewrap import BluepyBackend
 from dateutil import tz
@@ -17,8 +14,7 @@ from dotenv import load_dotenv
 from miflora.miflora_poller import MiFloraPoller, \
     MI_CONDUCTIVITY, MI_MOISTURE, MI_LIGHT, MI_TEMPERATURE, MI_BATTERY
 
-# from mpl_toolkits.axes_grid1 import Grid
-# from pandas.io.json import json_normalize
+from constants import PLANT_DEF
 
 load_dotenv(dotenv_path='.envrc')
 DB_PATH = 'PlantBot.db'
@@ -27,20 +23,31 @@ DB_PATH = 'PlantBot.db'
 utc_zone = tz.tzutc()
 local_zone = tz.tzlocal()
 
-MAC_ADD = os.environ.get("MAC_ADD")
 LAT = os.environ.get("LAT")
 LON = os.environ.get("LON")
 ACCUWEATHER_TOKEN = os.environ.get("ACCUWEATHER_TOKEN")
 
 
 def get_daylight_hours(lat, lon, today):
+    """
+    Function for determining the sunrise and sunset hours (in UTC) based on a geolocation.
+    Note that the UTC times are converted to local time.
+
+    Args:
+        lat (float): latitude
+        lon (float): longitude
+        today (obj): datetime python object
+
+    Returns:
+        <sunrise>, <sunset>
+
+    """
     func_name = inspect.stack()[0][3]
     logging.info("[{}] -> Starting Job".format(func_name))
 
     logging.info('[{}] -> Location: ({}, {})'.format(func_name, lat, lon))
 
     # get sunrise/sunset times (UTC)
-
     raw = Astral().sun_utc(today, float(lat), float(lon))
 
     # convert to local time
@@ -54,63 +61,120 @@ def get_daylight_hours(lat, lon, today):
 
 
 def get_plant_data():
+    """
+    Main function for extracting current plant measurements (per plant).
+
+    """
     func_name = inspect.stack()[0][3]
     logging.info("[{}] -> Starting Job".format(func_name))
 
-    poller = MiFloraPoller(MAC_ADD, BluepyBackend)
-    logging.info("[{}] -> Getting data from Mi Flora".format(func_name))
+    # load the plant definition file
+    with open(PLANT_DEF, 'r') as src:
+        plant_def = json.load(src)
 
-    # extract values
+    # iterate through plants
+    for p in plant_def['plants']:
+        # connect -> get data
+        logging.info("[{}] -> Getting data from Mi Flora [{}]".format(func_name, p['name']))
+        poller = MiFloraPoller(p['mac_address'], BluepyBackend)
+
+        # write to DB
+        logging.info("[{}] -> Writing to DB [{}]".format(func_name, p['name']))
+        _insert_data(p['name'], poller)
+
+
+def _insert_data(plant_name, poller):
+    """
+    Anonymous function for storing plant measurements to a local sqlite DB.
+
+    Args:
+        plant_name (str): name of plant for writing to correct table
+        poller (obj): miflora object containing measurements
+
+    """
+    # connect to the database
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    # check if table exists
+    if not _check_table(conn, plant_name):
+        _create_table(conn, plant_name)
+
+    # extract values for plant
     temperature = poller.parameter_value(MI_TEMPERATURE)
     moisture = poller.parameter_value(MI_MOISTURE)
     light = poller.parameter_value(MI_LIGHT)
     conductivity = poller.parameter_value(MI_CONDUCTIVITY)
     battery = poller.parameter_value(MI_BATTERY)
 
-    # write to DB
-    logging.info("[{}] -> Writing to DB".format(func_name))
-    _insert_data(temperature, moisture, light, conductivity, battery)
+    command = """
+        INSERT INTO {} (
+            date,
+            temperature,
+            moisture,
+            light,
+            conductivity,
+            battery)
+        VALUES (?, ?, ?, ?, ?, ?)""".format(plant_name)
+    cur.execute(command, (dt.now().strftime("%Y/%m/%d, %H:%M:%S"), temperature, moisture, light, conductivity, battery))
+    conn.commit()
 
 
-def _db_connect():
-    if not os.path.isfile(DB_PATH):
-        conn = sqlite3.connect(DB_PATH)
-        _create_table(conn)
-    else:
-        conn = sqlite3.connect(DB_PATH)
-    return conn
+def _check_table(conn, plant_name):
+    """
+    Utility to check if table exists in the DB connection.
+
+    Args:
+        conn (obj): database connection (sqlite)
+        plant_name (str): name of plant for writing to correct table
+
+    """
+    command = """
+            SELECT 1 FROM sqlite_master WHERE type='table' and name = ?"""
+    check = conn.execute(command, (plant_name,)).fetchone()
+    return check is not None
 
 
-def _create_table(conn):
+def _create_table(conn, plant_name):
+    """
+    Utility for creating table in DB based on fixed schema (based on sensor output).
+
+    Args:
+        conn (obj): database connection (sqlite)
+        plant_name (str): name of plant for writing to correct table
+
+    """
     cur = conn.cursor()  # instantiate a cursor obj
 
     command = """
-        CREATE TABLE plantbot (
+        CREATE TABLE {} (
             date DATE PRIMARY KEY,
             temperature real NOT NULL,
             moisture real NOT NULL,
             light real NOT NULL,
             conductivity real NOT NULL,
-            battery real NOT NULL)"""
+            battery real NOT NULL)""".format(plant_name)
 
     cur.execute(command)
     conn.commit()
 
 
-def _insert_data(temperature, moisture, light, conductivity, battery):
-    conn = _db_connect()  # connect to the database
+def latest_data(plant_name, num=1):
+    """
+    Function for extracting the lastest plant measurements (by time).
+
+    Args:
+        plant_name (str): name of plant for writing to correct table
+        num (int): number of latest measurements to extract for analysis
+
+    Returns:
+        out (list): contains a list of dictionaries containing plant measurements
+
+    """
+    conn = sqlite3.connect(DB_PATH)  # connect to the database
     cur = conn.cursor()  # instantiate a cursor obj
 
-    command = """INSERT INTO plantbot (date, temperature, moisture, light, conductivity, battery) VALUES (?, ?, ?, ?, ?, ?)"""
-    cur.execute(command, (dt.now().strftime("%Y/%m/%d, %H:%M:%S"), temperature, moisture, light, conductivity, battery))
-    conn.commit()
-
-
-def latest_data(num=1):
-    conn = _db_connect()  # connect to the database
-    cur = conn.cursor()  # instantiate a cursor obj
-
-    command = """SELECT * FROM plantbot ORDER BY date DESC LIMIT {}""".format(num)
+    command = """SELECT * FROM {} ORDER BY date DESC LIMIT {}""".format(plant_name, num)
     cur.execute(command)
     out = []
     for val in cur.fetchall():
@@ -121,6 +185,34 @@ def latest_data(num=1):
                     'conductivity': val[4]})
     return out
 
+
+def giphy_grabber(search, limit=100):
+    """
+    Utility for connecting and saving a random gif from the giphy API based on a search term.
+
+    Args:
+        search (str): search term for querying API
+        limit (int): maximum number of results to return
+
+    Returns:
+        url (str): url of randomly selected gif
+
+    """
+
+    # call giphy
+    g = giphypop.Giphy()
+
+    # search based on keyword
+    gen = g.search(search.replace('_', ' '), limit=limit)
+
+    # get random
+    choice = random.randint(0, limit)
+    ii = 0
+    while ii != choice:
+        url = next(gen)
+        ii += 1
+
+    return url
 
 # def get_forecast():
 #     response = requests.get(
@@ -140,21 +232,6 @@ def latest_data(num=1):
 #     return df
 
 
-def giphy_grabber(search):
-    # call giphy
-    g = giphypop.Giphy()
-
-    # search based on keyword
-    gen = g.search(search.replace('_', ' '))
-
-    # get random
-    choice = random.randint(0, 25)
-    ii = 0
-    while ii != choice:
-        url = next(gen)
-        ii += 1
-    return url
-
 # TODO -> interpolate plant data to regular time interval (10 mins?)
 
 # TODO -> de-mean moisture and soil conductivity
@@ -162,36 +239,3 @@ def giphy_grabber(search):
 # TODO -> build function relating moisture to age + temperature?
 
 # TODO -> predict moisture with forecast temperature
-
-# TODO -> make this pretty!!!
-
-
-# def plot_data(data, out_path):
-#     df = pd.DataFrame(data)
-#     df['date'] = pd.to_datetime(df['date'], infer_datetime_format=True)
-#
-#     plt.close('all')
-#     fig = plt.figure(figsize=(8, 6), dpi=150)
-#     ax = Grid(fig, rect=111, nrows_ncols=(4, 1),
-#               axes_pad=0.1, label_mode='L',
-#               )
-#
-#     hours = mdates.HourLocator(interval=12)
-#     h_fmt = mdates.DateFormatter('%a %-I%p')
-#
-#     ax[0].plot(df['date'], df['moisture'], '-b', lw=1)
-#     ax[0].set_ylabel('Moisture [%]', fontsize=10)
-#     ax[1].plot(df['date'], df['temperature'], '0.7', lw=1)
-#     ax[1].set_ylabel('Temp [°C]', fontsize=10)
-#     ax[2].plot(df['date'], df['light'], '0.5', lw=1)
-#     ax[2].set_ylabel('Light [lux]', fontsize=10)
-#     ax[3].plot(df['date'], df['conductivity'], '0.3', lw=1)
-#     ax[3].set_ylabel('Conductivity\n[uS/cm]', fontsize=10)
-#
-#     ax[3].xaxis.set_major_locator(hours)
-#     ax[3].xaxis.set_major_formatter(h_fmt)
-#
-#     fig.autofmt_xdate()
-#
-#     plt.tight_layout()
-#     plt.savefig(out_path)
