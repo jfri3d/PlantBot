@@ -1,9 +1,7 @@
-![alt text](assets/bender.jpeg "PlantBot")
+![alt text](assets/bender.png "PlantBot")
 # PlantBot 
 
 > Smart tracking for when to water plants with a pesky SlackBot!
-
-![alt text](assets/slack.jpeg "PlantBot")
 
 ##
 ### Prerequisites
@@ -100,3 +98,7 @@ plantbot      RUNNING   pid 1233, uptime 0:00:04
 alert         RUNNING   pid 1234, uptime 0:00:04
 ```
 
+##
+### Slack Output
+
+![alt text](assets/slack.jpeg "PlantBot")
