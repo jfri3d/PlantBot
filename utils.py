@@ -14,10 +14,9 @@ from dotenv import load_dotenv
 from miflora.miflora_poller import MiFloraPoller, \
     MI_CONDUCTIVITY, MI_MOISTURE, MI_LIGHT, MI_TEMPERATURE, MI_BATTERY
 
-from constants import PLANT_DEF
+from constants import PLANT_DEF, DB_PATH
 
 load_dotenv(dotenv_path='.envrc')
-DB_PATH = 'PlantBot.db'
 
 # deal with timezones
 utc_zone = tz.tzutc()

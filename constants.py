@@ -7,3 +7,4 @@ EMOJI_LIST = ["herb", "seedling", "leaves", "fallen_leaf"]
 
 # plant definition file
 PLANT_DEF = './plant_def.json'
+DB_PATH = 'plantbot.sqlite'
