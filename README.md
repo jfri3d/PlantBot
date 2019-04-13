@@ -1,11 +1,102 @@
-# PlantBot
-Always tracking when to water plants.
+![alt text](assets/bender.jpeg "PlantBot")
+# PlantBot 
 
-## Description
+> Smart tracking for when to water plants with a pesky SlackBot!
 
-## Requirements
+![alt text](assets/slack.jpeg "PlantBot")
 
-### Hardware
+##
+### Prerequisites
 
-### Software
+PlantBot requires _at minimum_ the following hardware setup:
+
+- [Raspberry Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/) for remote compute and storage needs
+- [Xiaomi Mi Flora](https://xiaomi-mi.com/sockets-and-sensors/xiaomi-huahuacaocao-flower-care-smart-monitor/) sensor(s) to monitor temperature, soil moisture, conductivity and light conditions
+
+### Installation
+
+Installation of PlantBot requires a working Raspberry Pi. [This guide](http://frederickvandenbosch.be/?p=2385) is suggested for setting up a Pi in headless mode.
+
+PlantBot can be installed by cloning this repo and its python requirements.
+
+```bash
+$ git clone https://github.com/jfri3d/PlantBot.git
+$ pip3 install -r requirements.txt
+```
+
+##
+### Configuration
+
+Minimal configuration with a `.envrc` file is required in order to link with Slack and determine correct sunrise/sunset times (i.e. based on location).
+
+- build a [slackbot](https://api.slack.com/bot-users)
+- identify the accurate [geolocation](https://www.latlong.net/) 
+
+```text
+export SLACK_TOKEN=
+export SLACK_BOT_TOKEN=
+export LAT=
+export LON=
+```
+
+##
+
+Finally, the most important aspect is to link the hardware with the software. In other words, determine the MAC address of each respective Mi Flora sensor. The basic linux tool `hcitool` identifies everything on the current network. The `Flower Care` sensor identifies the MAC address(es) that need to be saved.
+
+```bash
+$ sudo hcitool lescan
+
+LE Scan ...
+
+UU:UU:UU:UU:UU:UU (unknown)
+XX:XX:XX:XX:XX:XX Flower care
+```
+
+The saved MAC address(es) need to be saved into the `plant_def.json` file containing the following schema. Note that the default definition file naming can be changed in `constants.py`.
+
+```json
+{
+  "plants": [
+    {
+      "name": "minty",
+      "mac_address": "XX:XX:XX:XX:XX:XX",
+      "min_moisture": 30
+    },
+    {
+      "name": "oregano",
+      "mac_address": "AA:AA:AA:AA:AA:AA",
+      "min_moisture": 20
+    }
+  ]
+}
+
+```
+
+##
+### Deployment
+
+The two running processes for running PlantBot are as follows:
+
+- `plantbot.py` - responsible for daily scheduling of "reading" raw plant measurements
+- `slackbot_alert.py` - responsible for alerting via Slack which plant needs to be watered
+
+These processes are deployed with supervisor, see [this guide](https://www.vultr.com/docs/installing-and-configuring-supervisor-on-ubuntu-16-04) for installation and setup.
+
+- Access supervisor:
+```bash
+sudo supervisorctl
+```
+
+- Add both processes (defined in `./supervisor/`):
+```bash
+supervisor> add plantbot alert
+```
+
+- Check status of processes:
+```bash
+supervisor> status
+
+plantbot      RUNNING   pid 1233, uptime 0:00:04
+alert         RUNNING   pid 1234, uptime 0:00:04
+```
 
