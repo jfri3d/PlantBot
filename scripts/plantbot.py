@@ -14,7 +14,7 @@ from utils import get_daylight_hours, get_plant_data
 
 load_dotenv(dotenv_path='.envrc')
 
-logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
 
 scheduler = BlockingScheduler()
 
@@ -54,4 +54,5 @@ def daily_trigger():
 
 
 if __name__ == "__main__":
+    scheduler.add_job(daily_trigger)
     scheduler.start()

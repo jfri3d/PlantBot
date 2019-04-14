@@ -11,7 +11,7 @@ from slackclient import SlackClient
 from utils import latest_data, giphy_grabber
 
 load_dotenv(dotenv_path='.envrc')
-logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
 
 slack_client = SlackClient(os.environ.get("SLACK_BOT_TOKEN"))
 
