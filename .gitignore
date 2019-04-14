@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# specific files for the project
+.envrc
+plantbot.sqlite
+plant_def.json

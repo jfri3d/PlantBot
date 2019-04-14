@@ -8,8 +8,8 @@ from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 from slackclient import SlackClient
 
-from constants import CHANNEL, INTERVAL, EMOJI_LIST, PLANT_DEF
-from utils import latest_data, giphy_grabber
+from scripts.constants import CHANNEL, INTERVAL, EMOJI_LIST, PLANT_DEF
+from scripts.utils import latest_data, giphy_grabber
 
 load_dotenv(dotenv_path='.envrc')
 logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
@@ -41,7 +41,7 @@ def slackbot_alert():
             data = latest_data(p['name'], num=1)[0]
 
             # logic based on moisture
-            if data['moisture'] < p['min_moisture']:
+            if True: #data['moisture'] < p['min_moisture']:
                 logging.info('[{}] -> {} needs to be watered!!!'.format(func_name, p['name']))
 
                 # get url for search term for slack

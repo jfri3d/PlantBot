@@ -9,8 +9,8 @@ from apscheduler.triggers.combining import OrTrigger
 from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 
-from constants import INTERVAL
-from utils import get_daylight_hours, get_plant_data
+from scripts.constants import INTERVAL
+from scripts.utils import get_daylight_hours, get_plant_data
 
 load_dotenv(dotenv_path='.envrc')
 
