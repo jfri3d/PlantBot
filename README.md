@@ -3,7 +3,14 @@
 
 > Smart tracking for when to water plants with a pesky SlackBot!
 
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Deployment](#deployment)
+- [Slack Output](#slack-output)
+
 ##
+<a name="prerequisites"></a>
 ### Prerequisites
 
 PlantBot requires _at minimum_ the following hardware setup:
@@ -11,6 +18,7 @@ PlantBot requires _at minimum_ the following hardware setup:
 - [Raspberry Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/) for remote compute and storage needs
 - [Xiaomi Mi Flora](https://xiaomi-mi.com/sockets-and-sensors/xiaomi-huahuacaocao-flower-care-smart-monitor/) sensor(s) to monitor temperature, soil moisture, conductivity and light conditions
 
+<a name="installation"></a>
 ### Installation
 
 Installation of PlantBot requires a working Raspberry Pi. [This guide](http://frederickvandenbosch.be/?p=2385) is suggested for setting up a Pi in headless mode.
@@ -23,6 +31,7 @@ $ pip3 install -r requirements.txt
 ```
 
 ##
+<a name="configuration"></a>
 ### Configuration
 
 Minimal configuration with a `.envrc` file is required in order to link with Slack and determine correct sunrise/sunset times (i.e. based on location).
@@ -71,6 +80,7 @@ The saved MAC address(es) need to be saved into the `plant_def.json` file contai
 ```
 
 ##
+<a name="deployment"></a>
 ### Deployment
 
 The two running processes for running PlantBot are as follows:
@@ -99,6 +109,7 @@ alert         RUNNING   pid 1234, uptime 0:00:04
 ```
 
 ##
+<a name="slack-output"></a>
 ### Slack Output
 
 ![alt text](assets/slack.jpeg "PlantBot")
