@@ -1,5 +1,5 @@
 # define fixed rate for running plantbot.py
-INTERVAL = 2
+INTERVAL = 20
 
 # define slack channel + emojis
 CHANNEL = "general"
