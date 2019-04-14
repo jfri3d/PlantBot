@@ -34,7 +34,7 @@ $ pip3 install -r requirements.txt
 <a name="configuration"></a>
 ### Configuration
 
-Minimal configuration with a `.envrc` file is required in order to link with Slack and determine correct sunrise/sunset times (i.e. based on location).
+Minimal configuration with a `.envrc` file based on `.envrc.template` is required in order to link with Slack and determine correct sunrise/sunset times (i.e. based on location).
 
 - build a [slackbot](https://api.slack.com/bot-users)
 - identify the accurate [geolocation](https://www.latlong.net/) 
@@ -59,7 +59,7 @@ UU:UU:UU:UU:UU:UU (unknown)
 XX:XX:XX:XX:XX:XX Flower care
 ```
 
-The saved MAC address(es) need to be saved into the `plant_def.json` file containing the following schema. Note that the default definition file naming can be changed in `constants.py`.
+The saved MAC address(es) need to be saved into the `./data/plant_def.json` file containing the following schema. Note that the default definition file naming can be changed in `./scripts/constants.py`.
 
 ```json
 {
@@ -85,8 +85,8 @@ The saved MAC address(es) need to be saved into the `plant_def.json` file contai
 
 The two running processes for running PlantBot are as follows:
 
-- `plantbot.py` - responsible for daily scheduling of "reading" raw plant measurements
-- `slackbot_alert.py` - responsible for alerting via Slack which plant needs to be watered
+- `./scripts/plantbot.py` - responsible for daily scheduling of "reading" raw plant measurements
+- `./scripts/slackbot_alert.py` - responsible for alerting via Slack which plant needs to be watered
 
 These processes are deployed with supervisor, see [this guide](https://www.vultr.com/docs/installing-and-configuring-supervisor-on-ubuntu-16-04) for installation and setup.
 
