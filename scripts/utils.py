@@ -212,29 +212,3 @@ def giphy_grabber(search, limit=100):
         ii += 1
 
     return url
-
-# def get_forecast():
-#     response = requests.get(
-#         'http://dataservice.accuweather.com/locations/v1/cities/geoposition/search',
-#         params={'q': '{},{}'.format(LAT, LON), 'apikey': ACCUWEATHER_TOKEN},
-#     )
-#
-#     loc_key = response.json()['Key']
-#
-#     response = requests.get(
-#         'http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{}'.format(loc_key),
-#         params={'metric': True, 'apikey': ACCUWEATHER_TOKEN},
-#     )
-#
-#     df = json_normalize(response.json())
-#
-#     return df
-
-
-# TODO -> interpolate plant data to regular time interval (10 mins?)
-
-# TODO -> de-mean moisture and soil conductivity
-
-# TODO -> build function relating moisture to age + temperature?
-
-# TODO -> predict moisture with forecast temperature
