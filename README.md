@@ -30,6 +30,12 @@ $ git clone https://github.com/jfri3d/PlantBot.git
 $ pip3 install -r requirements.txt
 ```
 
+Note that all processing is time-based (i.e. with `cron`), requiring the correct local time on the pi.
+
+```bash
+sudo cp /usr/share/zoneinfo/<continent>/<city> /etc/localtime
+```
+
 ##
 <a name="configuration"></a>
 ### Configuration
