@@ -35,13 +35,14 @@ def slackbot_alert():
 
         # iterate through plants
         for p in plant_def['plants']:
+            logging.info('[{}] -> Checking {}'.format(func_name, p['name']))
 
             # query latest plant information
             data = latest_data(p['name'], num=1)[0]
 
             # logic based on moisture
             if data['moisture'] < p['min_moisture']:
-                logging.info('[{}] -> {} needs to be watered!!!'.format(func_name, p['name']))
+                logging.info('[{}] -> Need to water {} [{}%]!!!'.format(func_name, p['name'], data['moisture']))
 
                 # get url for search term for slack
                 url = giphy_grabber('water')

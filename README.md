@@ -27,7 +27,7 @@ PlantBot can be installed by cloning this repo and its python requirements.
 
 ```bash
 $ git clone https://github.com/jfri3d/PlantBot.git
-$ pip3 install -r requirements.txt
+$ python3 setup.py install
 ```
 
 Note that all processing is time-based (i.e. with `cron`), requiring the correct local time on the pi.
@@ -43,11 +43,13 @@ sudo cp /usr/share/zoneinfo/<continent>/<city> /etc/localtime
 Minimal configuration with a `.envrc` file based on `.envrc.template` is required in order to link with Slack and determine correct sunrise/sunset times (i.e. based on location).
 
 - build a [slackbot](https://api.slack.com/bot-users)
+- define a [giphy](https://developers.giphy.com/) "app"
 - identify the accurate [geolocation](https://www.latlong.net/) 
 
 ```text
 export SLACK_TOKEN=
 export SLACK_BOT_TOKEN=
+export GIPHY_KEY=
 export LAT=
 export LON=
 ```
@@ -61,6 +63,7 @@ $ sudo hcitool lescan
 
 LE Scan ...
 
+AA:AA:AA:AA:AA:AA Flower care
 UU:UU:UU:UU:UU:UU (unknown)
 XX:XX:XX:XX:XX:XX Flower care
 ```
