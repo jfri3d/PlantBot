@@ -97,19 +97,39 @@ The two running processes for running PlantBot are as follows:
 - `./scripts/plantbot.py` - responsible for daily scheduling of "reading" raw plant measurements
 - `./scripts/slackbot_alert.py` - responsible for alerting via Slack which plant needs to be watered
 
-These processes are deployed with supervisor, see [this guide](https://www.vultr.com/docs/installing-and-configuring-supervisor-on-ubuntu-16-04) for installation and setup.
+These processes are deployed with supervisor, see [this](http://supervisord.org/installing.html) for installation and setup. The end result should be an adapted `/etc/supervisor/supervisord.conf` file as such:
 
-- Access supervisor:
+```bash
+[unix_http_server]
+file=/var/run/supervisor.sock   ; (the path to the socket file)
+chmod=0700                       ; sockef file mode (default 0700)
+
+[supervisord]
+logfile=/var/log/supervisor/supervisord.log ; (main log file;default $CWD/supervisord.log)
+pidfile=/var/run/supervisord.pid ; (supervisord pidfile;default supervisord.pid)
+childlogdir=/var/log/supervisor            ; ('AUTO' child log dir, default $TEMP)
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix:///var/run/supervisor.sock ; use a unix:// URL  for a unix socket
+
+[include]
+files = /home/pi/PlantBot/supervisor/*.conf
+```
+
+- Controlling supervisor processes
 ```bash
 sudo supervisorctl
 ```
 
-- Add both processes (defined in `./supervisor/`):
+- Adding new processes (located in `./supervisor/`)
 ```bash
 supervisor> add plantbot alert
 ```
 
-- Check status of processes:
+- Check status of processes
 ```bash
 supervisor> status
 
