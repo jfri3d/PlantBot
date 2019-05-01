@@ -27,7 +27,8 @@ PlantBot can be installed by cloning this repo and its python requirements.
 
 ```bash
 $ git clone https://github.com/jfri3d/PlantBot.git
-$ python3 setup.py install
+$ cd PlantBot
+$ pip3 install -r requirements.txt
 ```
 
 Note that all processing is time-based (i.e. with `cron`), requiring the correct local time on the pi.
@@ -37,7 +38,7 @@ sudo cp /usr/share/zoneinfo/<continent>/<city> /etc/localtime
 ```
 
 ##
-<a name="configuration"></a>
+<a name="configuration"></a>s
 ### Configuration
 
 Minimal configuration with a `.envrc` file based on `.envrc.template` is required in order to link with Slack and determine correct sunrise/sunset times (i.e. based on location).
@@ -119,8 +120,9 @@ serverurl=unix:///var/run/supervisor.sock ; use a unix:// URL  for a unix socket
 files = /home/pi/PlantBot/supervisor/*.conf
 ```
 
-- Controlling supervisor processes
+- Controlling supervisor processes (first read from newly adapted *.conf)
 ```bash
+sudo supervisorctl reread
 sudo supervisorctl
 ```
 
