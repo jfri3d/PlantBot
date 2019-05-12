@@ -38,7 +38,7 @@ sudo cp /usr/share/zoneinfo/<continent>/<city> /etc/localtime
 ```
 
 ##
-<a name="configuration"></a>s
+<a name="configuration"></a>
 ### Configuration
 
 Minimal configuration with a `.envrc` file based on `.envrc.template` is required in order to link with Slack and determine correct sunrise/sunset times (i.e. based on location).
