@@ -8,3 +8,8 @@ EMOJI_LIST = ["herb", "seedling", "leaves", "fallen_leaf"]
 # plant definition file
 PLANT_DEF = './data/plant_def.json'
 DB_PATH = './data/plantbot.sqlite'
+
+# images
+LOGO_PATH = './assets/plant.png'
+HEALTHY_PATH = './assets/healthy.jpg'
+THIRSTY_PATH = './assets/thirsty.png'

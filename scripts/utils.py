@@ -9,8 +9,11 @@ from datetime import datetime as dt
 import giphypop
 from astral import Astral
 from btlewrap import BluepyBackend
-from constants import PLANT_DEF, DB_PATH
+from constants import PLANT_DEF, DB_PATH, LOGO_PATH, THIRSTY_PATH, HEALTHY_PATH
 from dateutil import tz
+from PIL import Image, ImageFont
+from constants import PLANT_DEF, LOGO_PATH, THIRSTY_PATH, HEALTHY_PATH
+from font_fredoka_one import FredokaOne
 from dotenv import load_dotenv
 from miflora.miflora_poller import MiFloraPoller, \
     MI_CONDUCTIVITY, MI_MOISTURE, MI_LIGHT, MI_TEMPERATURE, MI_BATTERY
@@ -211,3 +214,40 @@ def giphy_grabber(search, limit=100):
         ii += 1
 
     return url
+
+
+# get water drop
+def _load_image(path):
+    im = Image.open(path)
+    # TODO -> scale
+    # TODO -> adjust palette based on inky
+    pal_img = Image.new("P", (1, 1))
+    pal_img.putpalette((255, 255, 255, 0, 0, 0, 255, 0, 0) + (0, 0, 0) * 252)
+    im = im.convert("RGB").quantize(palette=pal_img)
+    return im
+
+
+def _calculate_spacing(inky, n):
+    return inky.HEIGHT // (n + 1)
+
+
+def _build_header(inky, draw, img, n):
+    # build grid for showing information
+    dy = _calculate_spacing(inky, n)
+    for ind in range(n):
+        y = dy * (ind + 1)
+        draw.line((0, y, inky.WIDTH, y), fill=inky.BLACK, width=2)
+
+    # add PlantBot icon
+    logo = _load_image(LOGO_PATH)
+    x = 10  # left edge
+    img.paste(logo, box=(10, (dy - logo.size[1]) // 2))
+
+    # format message for inkyWHAT
+    header = "PlantBot"
+    font = ImageFont.truetype(FredokaOne, 45)
+    w, h = font.getsize(header)
+    y = dy // 2 - h // 2
+    draw.text((logo.size[0] + x, y), header, inky.BLACK, font)
+
+    return img
