@@ -7,16 +7,16 @@ import sqlite3
 from datetime import datetime as dt
 
 import giphypop
+from PIL import Image, ImageFont
 from astral import Astral
 from btlewrap import BluepyBackend
-from constants import PLANT_DEF, DB_PATH, LOGO_PATH, THIRSTY_PATH, HEALTHY_PATH
 from dateutil import tz
-from PIL import Image, ImageFont
-from constants import PLANT_DEF, LOGO_PATH, THIRSTY_PATH, HEALTHY_PATH
-from font_fredoka_one import FredokaOne
 from dotenv import load_dotenv
+from font_fredoka_one import FredokaOne
 from miflora.miflora_poller import MiFloraPoller, \
     MI_CONDUCTIVITY, MI_MOISTURE, MI_LIGHT, MI_TEMPERATURE, MI_BATTERY
+
+from constants import DB_PATH, PLANT_DEF, LOGO_PATH
 
 load_dotenv(dotenv_path='.envrc')
 
@@ -245,7 +245,7 @@ def _build_header(inky, draw, img, n):
 
     # format message for inkyWHAT
     header = "PlantBot"
-    font = ImageFont.truetype(FredokaOne, 45)
+    font = ImageFont.truetype(FredokaOne, 35)
     w, h = font.getsize(header)
     y = dy // 2 - h // 2
     draw.text((logo.size[0] + x, y), header, inky.BLACK, font)

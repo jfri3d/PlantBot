@@ -5,9 +5,10 @@ import os
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
-from constants import CHANNEL, INTERVAL, EMOJI_LIST, PLANT_DEF
 from dotenv import load_dotenv
 from slackclient import SlackClient
+
+from constants import CHANNEL, INTERVAL, EMOJI_LIST, PLANT_DEF
 from utils import latest_data, giphy_grabber
 
 load_dotenv(dotenv_path='.envrc')
@@ -66,4 +67,5 @@ def slackbot_alert():
 
 
 if __name__ == "__main__":
+    scheduler.add_job(slackbot_alert)
     scheduler.start()

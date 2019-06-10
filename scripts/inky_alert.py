@@ -5,10 +5,11 @@ import logging
 from PIL import Image, ImageFont, ImageDraw
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
-from constants import THIRSTY_PATH, HEALTHY_PATH, PLANT_DEF, INTERVAL
 from dotenv import load_dotenv
 from font_fredoka_one import FredokaOne
 from inky import InkyWHAT
+
+from constants import THIRSTY_PATH, HEALTHY_PATH, PLANT_DEF, INTERVAL
 from utils import latest_data, _build_header, _calculate_spacing, _load_image
 
 load_dotenv(dotenv_path='.envrc')
@@ -17,7 +18,7 @@ logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=loggin
 scheduler = BlockingScheduler()
 
 
-@scheduler.scheduled_job(CronTrigger(minute='5/{}'.format(INTERVAL), hour='*', day='*', month='*', day_of_week='*'))
+@scheduler.scheduled_job(CronTrigger(minute='1/{}'.format(INTERVAL), hour='*', day='*', month='*', day_of_week='*'))
 def inky_update():
     """
     PlantBot update via inkyWHAT based on which registered plant is below its respective moisture threshold.
@@ -49,7 +50,7 @@ def inky_update():
     dy = _calculate_spacing(inky, n)
 
     # iterate through plants
-    font = ImageFont.truetype(FredokaOne, 35)
+    font = ImageFont.truetype(FredokaOne, 28)
     for ind, p in enumerate(plant_def['plants']):
 
         logging.info('[{}] -> Updating {}'.format(func_name, p['name']))
@@ -64,7 +65,7 @@ def inky_update():
         w, h = font.getsize(message)
 
         # define placement
-        x = 25  # left-edge
+        x = 40  # edge
         y = dy * (ind + 1) + h // 2
 
         # write text
@@ -79,8 +80,9 @@ def inky_update():
             icon = _load_image(HEALTHY_PATH)
 
         # "paste" image
-        y2 = dy // 2 - icon.size[1] // 2
-        img.paste(icon, box=(inky.WIDTH - icon.size[0] - x, y - y2))
+        y2 = icon.size[1] // 2
+        x2 = icon.size[0] // 2
+        img.paste(icon, box=(inky.WIDTH - x - x2, y - y2))
 
     # display on inky
     inky.set_image(img)
@@ -88,4 +90,5 @@ def inky_update():
 
 
 if __name__ == "__main__":
+    scheduler.add_job(inky_update)
     scheduler.start()
