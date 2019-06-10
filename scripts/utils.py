@@ -9,7 +9,7 @@ from datetime import datetime as dt
 import giphypop
 from PIL import Image, ImageFont
 from astral import Astral
-from btlewrap import BluepyBackend
+from btlewrap import BluepyBackend, BluetoothBackendException
 from constants import DB_PATH, PLANT_DEF, LOGO_PATH
 from dateutil import tz
 from dotenv import load_dotenv
@@ -74,13 +74,16 @@ def get_plant_data():
 
     # iterate through plants
     for p in plant_def['plants']:
-        # connect -> get data
-        logging.info("[{}] -> Getting data from Mi Flora [{}]".format(func_name, p['name']))
-        poller = MiFloraPoller(p['mac_address'], BluepyBackend)
+        try:
+            # connect -> get data
+            logging.info("[{}] -> Getting data from Mi Flora [{}]".format(func_name, p['name']))
+            poller = MiFloraPoller(p['mac_address'], BluepyBackend)
 
-        # write to DB
-        logging.info("[{}] -> Writing to DB [{}]".format(func_name, p['name']))
-        _insert_data(p['name'], poller)
+            # write to DB
+            logging.info("[{}] -> Writing to DB [{}]".format(func_name, p['name']))
+            _insert_data(p['name'], poller)
+        except BluetoothBackendException:
+            logging.error("[{}] -> BlueToothBackendException [{}]".format(func_name, p['name']))
 
 
 def _insert_data(plant_name, poller):
