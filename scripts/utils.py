@@ -258,6 +258,7 @@ def _build_header(inky, draw, img, n):
     header = dt.now().strftime("%d.%m.%Y %H:%M")
     font = ImageFont.truetype(FredokaOne, 16)
     w, h = font.getsize(header)
-    draw.text((inky.WIDTH - w, 0), header, inky.BLACK, font)
+    time_edge = 2
+    draw.text((inky.WIDTH - w - time_edge, 0), header, inky.BLACK, font)
 
     return img

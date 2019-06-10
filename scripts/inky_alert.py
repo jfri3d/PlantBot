@@ -3,6 +3,7 @@ import json
 import logging
 import math
 import os
+from datetime import datetime as dt
 
 from PIL import Image, ImageFont, ImageDraw
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -11,7 +12,7 @@ from dotenv import load_dotenv
 from font_fredoka_one import FredokaOne
 from inky import InkyWHAT
 
-from constants import THIRSTY_PATH, HEALTHY_PATH, PLANT_DEF, INTERVAL, ASSET_PATH
+from constants import THIRSTY_PATH, HEALTHY_PATH, PLANT_DEF, INTERVAL, SUN_PATH, MOON_PATH, MAX_LUX, PLANT_ICON_PATH
 from utils import latest_data, _build_header, _calculate_spacing, _load_image
 
 load_dotenv(dotenv_path='.envrc')
@@ -52,7 +53,10 @@ def inky_update():
     dy = _calculate_spacing(inky, n)
 
     # iterate through plants
-    font = ImageFont.truetype(FredokaOne, 28)
+    font = lambda fs: ImageFont.truetype(FredokaOne, fs)
+    name_font = font(25)
+    time_font = font(12)
+    val_font = font(20)
     for ind, p in enumerate(plant_def['plants']):
 
         logging.info('[{}] -> Updating {}'.format(func_name, p['name']))
@@ -61,18 +65,34 @@ def inky_update():
         data = latest_data(p['name'], num=1)[0]
 
         # define placement for plant X
-        x = 5  # edge
+        edge = 5  # edge
         y = dy * (ind + 1)
         gap = lambda pct: 2 * math.ceil(dy * pct / 2)
 
         # add icon
-        icon = _load_image(os.path.join(ASSET_PATH, p['icon']), dy - gap(0.2))
-        img.paste(icon, box=(x, y + gap(0.2) // 2))
+        icon = _load_image(os.path.join(PLANT_ICON_PATH, p['icon']), dy - gap(0.2))
+        img.paste(icon, box=(edge, y + gap(0.2) // 2))
 
-        # add message
-        message = "{}     {}%".format(p['name'], int(data['moisture']))
-        w, h = font.getsize(message)
-        draw.text((dy, y + h // 2), message, inky.BLACK, font)
+        # add name
+        message = p['name']
+        w, h = name_font.getsize(message)
+        loc = y + dy // 2 - h // 2
+        draw.text((dy + edge, loc), message, inky.BLACK, name_font)
+
+        # add measurement time
+        message = dt.strptime(data['date'], "%Y/%m/%d, %H:%M:%S").strftime("%d.%m.%Y %H:%M")
+        w, h = time_font.getsize(message)
+        time_edge = 2
+        draw.text((200 - time_edge - w, y + dy - h - time_edge), message, inky.BLACK, time_font)
+
+        # add vertical line
+        draw.line((200, y, 200, y + dy), fill=inky.BLACK, width=2)
+
+        # add moisture information
+        message = "{}%".format(int(data['moisture']))
+        w, h = val_font.getsize(message)
+        loc = y + dy // 2 - h // 2
+        draw.text((200 + edge, loc), message, inky.BLACK, val_font)
 
         # logic based on moisture [different logo]
         if data['moisture'] < p['min_moisture']:
@@ -83,7 +103,28 @@ def inky_update():
             icon = _load_image(HEALTHY_PATH, dy - gap(0.1))
 
         # "paste" image
-        img.paste(icon, box=(inky.WIDTH - icon.size[0] - x, y + gap(0.1) // 2))
+        img.paste(icon, box=(250 + dy // 2 - icon.size[0] // 2, y + gap(0.1) // 2))
+
+        # add vertical line
+        draw.line((300, y, 300, y + dy), fill=inky.BLACK, width=2)
+
+        # add temperature/light information
+        message = "{}°C".format(int(data['temperature']))
+        w, h = val_font.getsize(message)
+        loc = y + dy // 2 - h // 2
+        draw.text((300 + edge, loc), message, inky.BLACK, val_font)
+
+        # logic based on light [different logo + scaling]
+        dy_sun = 0
+        if data['light'] < 10:
+            icon = _load_image(MOON_PATH, dy - gap(0.1))
+        else:
+            sun_size = dy - max([gap(0.1), int((math.log(MAX_LUX) - math.log(data['light'])) * 6)])
+            icon = _load_image(SUN_PATH, sun_size)
+            dy_sun = dy // 2 - icon.size[1] // 2
+
+        # "paste" image
+        img.paste(icon, box=(350 + dy // 2 - icon.size[0] // 2, y + dy_sun + gap(0.1) // 2))
 
     # display on inky
     inky.set_image(img)
