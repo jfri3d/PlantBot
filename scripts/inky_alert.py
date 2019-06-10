@@ -1,6 +1,8 @@
 import inspect
 import json
 import logging
+import math
+import os
 
 from PIL import Image, ImageFont, ImageDraw
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -9,7 +11,7 @@ from dotenv import load_dotenv
 from font_fredoka_one import FredokaOne
 from inky import InkyWHAT
 
-from constants import THIRSTY_PATH, HEALTHY_PATH, PLANT_DEF, INTERVAL
+from constants import THIRSTY_PATH, HEALTHY_PATH, PLANT_DEF, INTERVAL, ASSET_PATH
 from utils import latest_data, _build_header, _calculate_spacing, _load_image
 
 load_dotenv(dotenv_path='.envrc')
@@ -58,31 +60,30 @@ def inky_update():
         # query latest plant information
         data = latest_data(p['name'], num=1)[0]
 
-        # format message for inkyWHAT
+        # define placement for plant X
+        x = 5  # edge
+        y = dy * (ind + 1)
+        gap = lambda pct: 2 * math.ceil(dy * pct / 2)
+
+        # add icon
+        icon = _load_image(os.path.join(ASSET_PATH, p['icon']), dy - gap(0.2))
+        img.paste(icon, box=(x, y + gap(0.2) // 2))
+
+        # add message
         message = "{}     {}%".format(p['name'], int(data['moisture']))
-
-        # define text block
         w, h = font.getsize(message)
-
-        # define placement
-        x = 40  # edge
-        y = dy * (ind + 1) + h // 2
-
-        # write text
-        draw.text((x, y), message, inky.BLACK, font)
+        draw.text((dy, y + h // 2), message, inky.BLACK, font)
 
         # logic based on moisture [different logo]
         if data['moisture'] < p['min_moisture']:
             logging.info('[{}] -> Need to water {} [{}%]!!!'.format(func_name, p['name'], data['moisture']))
-            icon = _load_image(THIRSTY_PATH)
+            icon = _load_image(THIRSTY_PATH, dy - gap(0.1))
         else:
             logging.info('[{}] -> Healthy moisture ({} %)!'.format(func_name, data['moisture']))
-            icon = _load_image(HEALTHY_PATH)
+            icon = _load_image(HEALTHY_PATH, dy - gap(0.1))
 
         # "paste" image
-        y2 = icon.size[1] // 2
-        x2 = icon.size[0] // 2
-        img.paste(icon, box=(inky.WIDTH - x - x2, y - y2))
+        img.paste(icon, box=(inky.WIDTH - icon.size[0] - x, y + gap(0.1) // 2))
 
     # display on inky
     inky.set_image(img)

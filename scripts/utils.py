@@ -10,13 +10,12 @@ import giphypop
 from PIL import Image, ImageFont
 from astral import Astral
 from btlewrap import BluepyBackend
+from constants import DB_PATH, PLANT_DEF, LOGO_PATH
 from dateutil import tz
 from dotenv import load_dotenv
 from font_fredoka_one import FredokaOne
 from miflora.miflora_poller import MiFloraPoller, \
     MI_CONDUCTIVITY, MI_MOISTURE, MI_LIGHT, MI_TEMPERATURE, MI_BATTERY
-
-from constants import DB_PATH, PLANT_DEF, LOGO_PATH
 
 load_dotenv(dotenv_path='.envrc')
 
@@ -217,14 +216,20 @@ def giphy_grabber(search, limit=100):
 
 
 # get water drop
-def _load_image(path):
+def _load_image(path, dy):
+
+    # open image
     im = Image.open(path)
-    # TODO -> scale
-    # TODO -> adjust palette based on inky
+
+    # keep aspect ratio
+    ratio = im.size[0]/im.size[1]
+    im = im.resize((int(ratio*dy), dy), resample=Image.LANCZOS)
+
+    # build appropriate INKY palette
     pal_img = Image.new("P", (1, 1))
     pal_img.putpalette((255, 255, 255, 0, 0, 0, 255, 0, 0) + (0, 0, 0) * 252)
-    im = im.convert("RGB").quantize(palette=pal_img)
-    return im
+
+    return im.convert("RGB").quantize(palette=pal_img)
 
 
 def _calculate_spacing(inky, n):
@@ -239,15 +244,20 @@ def _build_header(inky, draw, img, n):
         draw.line((0, y, inky.WIDTH, y), fill=inky.BLACK, width=2)
 
     # add PlantBot icon
-    logo = _load_image(LOGO_PATH)
-    x = 10  # left edge
-    img.paste(logo, box=(10, (dy - logo.size[1]) // 2))
+    logo = _load_image(LOGO_PATH, dy)
+    img.paste(logo, box=(0, (dy - logo.size[1]) // 2))
 
     # format message for inkyWHAT
     header = "PlantBot"
-    font = ImageFont.truetype(FredokaOne, 35)
+    font = ImageFont.truetype(FredokaOne, 32)
     w, h = font.getsize(header)
     y = dy // 2 - h // 2
-    draw.text((logo.size[0] + x, y), header, inky.BLACK, font)
+    draw.text((logo.size[0], y), header, inky.BLACK, font)
+
+    # include date/time of last "run"
+    header = dt.now().strftime("%d.%m.%Y %H:%M")
+    font = ImageFont.truetype(FredokaOne, 16)
+    w, h = font.getsize(header)
+    draw.text((inky.WIDTH - w, 0), header, inky.BLACK, font)
 
     return img

@@ -1,3 +1,5 @@
+import os
+
 # define fixed rate for running plantbot.py
 INTERVAL = 5
 
@@ -10,9 +12,10 @@ PLANT_DEF = './data/plant_def.json'
 DB_PATH = './data/plantbot.sqlite'
 
 # images
-LOGO_PATH = './assets/plant.png'
-HEALTHY_PATH = './assets/healthy.jpg'
-THIRSTY_PATH = './assets/thirsty.png'
+ASSET_PATH = './assets'
+LOGO_PATH = os.path.join(ASSET_PATH, 'plant.png')
+HEALTHY_PATH = os.path.join(ASSET_PATH, 'healthy.jpg')
+THIRSTY_PATH = os.path.join(ASSET_PATH, 'thirsty.png')
 
 # slackbot
 RTM_READ_DELAY = 1  # 1 second delay between reading from RTM
