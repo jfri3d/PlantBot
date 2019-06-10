@@ -119,7 +119,7 @@ def inky_update():
         if data['light'] < 10:
             icon = _load_image(MOON_PATH, dy - gap(0.1))
         else:
-            sun_size = dy - max([gap(0.1), int((math.log(MAX_LUX) - math.log(data['light'])) * 6)])
+            sun_size = max([gap(0.1), dy - int((math.log(MAX_LUX) - math.log(data['light'])) * 6)])
             icon = _load_image(SUN_PATH, sun_size)
             dy_sun = dy // 2 - icon.size[1] // 2
 
