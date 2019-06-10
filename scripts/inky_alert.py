@@ -77,13 +77,13 @@ def inky_update():
         message = p['name']
         w, h = name_font.getsize(message)
         loc = y + dy // 2 - h // 2
-        draw.text((dy + edge, loc), message, inky.BLACK, name_font)
+        draw.text((dy + edge, loc - edge), message, inky.BLACK, name_font)
 
         # add measurement time
         message = dt.strptime(data['date'], "%Y/%m/%d, %H:%M:%S").strftime("%d.%m.%Y %H:%M")
         w, h = time_font.getsize(message)
         time_edge = 2
-        draw.text((200 - time_edge - w, y + dy - h - time_edge), message, inky.BLACK, time_font)
+        draw.text((dy + edge, y + dy - h - time_edge), message, inky.BLACK, time_font)
 
         # add vertical line
         draw.line((200, y, 200, y + dy), fill=inky.BLACK, width=2)
@@ -92,7 +92,7 @@ def inky_update():
         message = "{}%".format(int(data['moisture']))
         w, h = val_font.getsize(message)
         loc = y + dy // 2 - h // 2
-        draw.text((200 + edge, loc), message, inky.BLACK, val_font)
+        draw.text((200 + edge, loc - edge), message, inky.BLACK, val_font)
 
         # logic based on moisture [different logo]
         if data['moisture'] < p['min_moisture']:
@@ -112,7 +112,7 @@ def inky_update():
         message = "{}°C".format(int(data['temperature']))
         w, h = val_font.getsize(message)
         loc = y + dy // 2 - h // 2
-        draw.text((300 + edge, loc), message, inky.BLACK, val_font)
+        draw.text((300 + edge, loc - edge), message, inky.BLACK, val_font)
 
         # logic based on light [different logo + scaling]
         dy_sun = 0
